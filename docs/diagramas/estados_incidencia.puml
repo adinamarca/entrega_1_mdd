@@ -1,0 +1,44 @@
+@startuml Estados de la Incidencia
+
+skinparam state {
+    BackgroundColor MistyRose
+    BorderColor DarkRed
+}
+
+title Maquina de Estados de la Incidencia (State Pattern)
+
+[*] --> Abierta : registrar_incidencia()
+
+Abierta --> EnAnalisis : iniciar_analisis()
+
+EnAnalisis --> EnResolucion : iniciar_resolucion()
+
+EnResolucion --> Resuelta : resolver()\n[requiere resolucion asignada]
+
+Resuelta --> [*]
+
+state Resuelta #LightGreen : Estado final
+
+state EnResolucion {
+    state "Validacion" as V : No se puede cerrar\nsin Resolucion asignada
+}
+
+note right of Abierta
+    Toda incidencia debe
+    estar asociada a un pedido
+end note
+
+note left of EnResolucion
+    Regla de negocio:
+    No se puede resolver sin
+    una Resolucion asignada
+    (descripcion + accion_tomada)
+end note
+
+note bottom of Resuelta
+    Una incidencia resuelta puede
+    gatillar acciones sobre el pedido
+    (reenvio, compensacion, etc.)
+end note
+
+@enduml
