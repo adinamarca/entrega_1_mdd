@@ -45,6 +45,35 @@ entregable_1/
 - **Estructurales:** Adapter, Facade, Decorator
 - **Comportamiento:** State, Strategy, Observer
 
+## Justificación de Patrones y Principios SOLID
+
+Para abordar la complejidad de la logística de última milla, se aplicaron los siguientes patrones y principios, optimizando la mantenibilidad y modularidad:
+
+- **Patrones Creacionales**
+- Factory Method: Permite crear distintos tipos de pedidos según canal y tipo, encapsulando la lógica de instanciación.
+- Builder: Facilita la construcción de pedidos con diferentes combinaciones de datos requeridos/progresivos.
+- Singleton: Garantiza un único EventBus centralizado para eventos de dominio, evitando inconsistencias.
+
+- **Patrones Estructurales**
+
+- Adapter: Unifica la entrada de pedidos provenientes de múltiples fuentes al modelo interno.
+- Facade: Simplifica la interface de asignación/despacho, ocultando su complejidad.
+- Decorator: Añade dinámicamente características a los pedidos, como requisitos especiales, sin modificar la clase base.
+
+- **Patrones de Comportamiento**
+
+- State: Gestiona el ciclo de vida dinámico de los pedidos y sus transiciones de estado válidas.
+- Strategy: Permite intercambiar algoritmos de asignación según condiciones operativas.
+- Observer: Implementado vía EventBus para notificar y coordinar reacciones entre contextos desacoplados.
+
+- **Principios SOLID**
+
+- SRP: Cada clase asume una única responsabilidad (ej. Pedido, PedidoRepository).
+- OCP: Nuevas estrategias y funcionalidades pueden agregarse sin modificar el código existente.
+- LSP: Las subclases de estados mantienen la integridad de las transiciones de Pedido.
+- ISP: Interfaces específicas y separadas para cada tipo de repositorio (lectura/escritura).
+- DIP: Los servicios dependen de abstracciones, facilitando simulación y pruebas.
+
 ## Regenerar Diagramas
 
 ```bash
