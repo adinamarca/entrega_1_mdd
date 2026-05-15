@@ -1,0 +1,122 @@
+@startuml Arquitectura Final - Entregable 2
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam ArrowColor #1F3864
+skinparam ArrowFontColor #444444
+skinparam package {
+    BackgroundColor #F4F8FC
+    BorderColor #1F3864
+    FontColor #1F3864
+    FontStyle bold
+}
+skinparam rectangle {
+    BackgroundColor #FFFFFF
+    BorderColor #2E75B6
+    FontColor #333333
+}
+skinparam component {
+    BackgroundColor #E8F0FA
+    BorderColor #2E75B6
+    FontColor #1F3864
+}
+skinparam queue {
+    BackgroundColor #FFF4E5
+    BorderColor #B97A00
+    FontColor #6B4500
+}
+
+title Arquitectura Final del Servicio Web\nLogistica de Ultima Milla — Entregable 2
+' === CLIENTES (estilo cliente-servidor) ===
+package "Clientes Externos" as clientes #FAFCFF {
+    rectangle "App Movil" as cli_app
+    rectangle "Portal Web" as cli_web
+    rectangle "E-commerce" as cli_ecom
+    rectangle "Partners /\nIntegraciones" as cli_int
+}
+
+' === API GATEWAY (conceptual) ===
+component "API Gateway /\nLoad Balancer\n<i>(estrategia HA)</i>" as gateway #F5E8FF
+
+clientes -down-> gateway : HTTPS / REST
+' === SERVICIO WEB (Layered Architecture) ===
+package "Servicio Web FastAPI" as service {
+
+    package "Capa Presentation (api/)" as presentation #FFF4DC {
+        component "Controllers\n(MVC)" as ctrl
+        component "Middleware\n(Auth + Errors)" as mw
+        component "Schemas Pydantic\n(DTOs)" as schemas
+    }
+
+    package "Capa Application (application/)" as application #E8F8E8 {
+        component "Service Layer\n<i>orquesta casos de uso</i>" as svc
+    }
+
+    package "Capa Domain (domain/)" as domain #FFF0F5 {
+        component "Aggregates\n(Pedido, Incidencia)" as agg
+        component "Value Objects\n+ Estados" as vo
+        component "Patrones GoF del E1\n(Factory, Builder,\nStrategy, Decorator,\nState, Facade...)" as gof
+    }
+
+    package "Capa Infrastructure (infrastructure/)" as infra #E8E8FA {
+        component "Repository\n<i>(en memoria)</i>" as repo
+        component "JWT Provider\n+ RBAC" as auth
+        component "Event Bus\n(Observer)" as bus
+    }
+}
+
+gateway -down-> presentation : HTTP request
+presentation -down-> application : llama services
+application -down-> domain : opera sobre aggregates
+application -right-> infra : DIP: usa interfaces
+domain -right-> infra : publica eventos
+mw -[hidden]- ctrl
+ctrl -[hidden]- schemas
+agg -[hidden]- vo
+vo -[hidden]- gof
+
+' === SERVERLESS (componentes event-driven) ===
+queue "Event Queue\n<i>(SQS / Pub/Sub)</i>" as queue
+package "Serverless Functions (serverless/)" as serverless #FFFCE8 {
+    component "Notificaciones\n<i>(notificaciones_handler)</i>" as fn_notif
+    component "Webhooks Externos\n<i>(webhook_handler)</i>" as fn_webhook
+    component "Reportes Batch\n<i>(reportes_handler)</i>" as fn_report
+}
+
+bus -right-> queue : publica eventos de dominio
+queue -right-> fn_notif
+queue -right-> fn_webhook
+queue -right-> fn_report
+
+fn_notif --> cli_app : notif push
+fn_webhook --> cli_int : webhook
+' === STORE ===
+database "Persistencia\n(en memoria, futuro DB)" as db #F0F0F0
+repo -down-> db
+
+' === NOTAS ===
+note right of presentation
+  <b>Atributos servidos:</b>
+  • Rendimiento (200ms, FastAPI async)
+  • Seguridad (JWT + RBAC por endpoint)
+end note
+
+note right of serverless
+  <b>Atributos servidos:</b>
+  • Disponibilidad (auto-escalado)
+  • Escalabilidad (carga variable)
+  • Costo (pago por invocacion)
+  <b>Trade-off:</b> cold start, vendor lock-in
+end note
+
+note left of domain
+  <b>Heredado intacto del E1:</b>
+  Aggregates, VOs, estados,
+  9 patrones GoF, reglas de negocio.
+  <b>Atributo:</b> Modificabilidad (OCP).
+end note
+
+@enduml
